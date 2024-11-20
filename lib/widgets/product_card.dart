@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:m_warunks/screens/login.dart';
 import 'package:m_warunks/screens/productentry_form.dart';
+import 'package:m_warunks/screens/list_productentry.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class ItemHomepage {
   final String name;
@@ -18,6 +22,7 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Material(
       // Set the background color from the app's theme.
       color: item.color,
@@ -26,7 +31,7 @@ class ProductCard extends StatelessWidget {
 
       child: InkWell(
         // Action when the card is tapped.
-        onTap: () {
+        onTap: () async{
           // Show a SnackBar message when the card is tapped.
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
@@ -42,6 +47,36 @@ class ProductCard extends StatelessWidget {
                 builder: (context) => const ProductEntryFormPage(),
               ),
             );
+          }else if (item.name == "Lihat Daftar Produk") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProductEntryPage()
+              ),
+            );
+          }else if (item.name == "Logout") {
+            final response = await request.logout(
+              // TODO: Ganti URL dan jangan lupa tambahkan trailing slash (/) di akhir URL!
+              "http://127.0.0.1:8000/auth/logout/");
+            String message = response["message"];
+            if (context.mounted) {
+              if (response['status']) {
+                String uname = response["username"];
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("$message Sampai jumpa, $uname."),
+                ));
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(message),
+                  ),
+                );
+              }
+            }
           }
           // You can add more navigation options here for other item names if needed
         },
